@@ -1,0 +1,193 @@
+#!/bin/sh
+
+#  ilovelamp
+#  
+#
+#  Created by Cyrus on 3/18/13.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#  SYNOPSIS: Sets up a Raspberry Pi to be a LAMP (Linux, Apache, MySQL, PHP)
+#  web server. This script assumes that you are executing on a debian-based
+#  Linux distribution (ie Raspbian). This will download, install, and
+#  configure Apache2, MySQL, and PHP5. Optionally, this will also install
+#  the VSFTP server, and phpMyAdmin.
+#
+
+clear
+
+LAMPI_NAME='LAMPi'
+LAMPI_VERSION='1.0'
+
+# Get LAMPi's home for future reference.
+CURRENT_DIR=`pwd`
+LAMPI_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Ask the user if it is ok to run setup.
+function main_check_proceed() {
+	echo
+	echo "********************************************************"
+	echo "* $LAMPI_NAME v$LAMPI_VERSION                          *"
+	echo "*                                                      *"
+	echo "* This tool will prepare your Raspberry Pi to be a     *"
+	echo "* LAMP (Linux, Apache, MySQL, PHP) server and          *"
+	echo "* optionally VSFTP and phpMyAdmin. This tool is        *"
+	echo "* intended to be run on a Debian-based Linux OS        *"
+	echo "* such as Raspbian.                                    *"
+	echo "*                                                      *"
+	echo "********************************************************"
+	echo
+	local doInstall
+	while true; do
+		read -p "Proceed with setup? (Y/n): " doInstall
+		case doInstall in
+			[Yy]* ) return 0;;
+			[Nn]* ) return 1;;
+			* ) echo "Please answer yes or no.";;
+		esac
+	done
+}
+
+# Initialize.
+function main_init() {
+	echo
+	echo "Initializing..."
+	# Make sure LAMPi's directory is the working directory.
+	cd "$LAMPI_HOME"
+
+	# Make sure all the child modules are executable.
+	chmod +rx *.sh
+}
+
+# Check to see if SSH exists and is running.
+function main_check_ssh() {
+	if [ -f /etc/init.d/ssh ]; then
+		sudo service ssh status &> /dev/null
+		if [ $? -eq 0 ]; then
+			return 0
+		fi 
+	fi
+	return 1
+}
+
+# User cancelled?
+if ! main_check_proceed; then
+	exit 0
+fi
+
+sudo echo
+main_init
+# Is SSH configured and enabled?
+echo "Checking SSH..."
+if ! main_check_ssh; then
+	echo "SSH is not enabled. You need to enable SSH for remote management."
+	echo "This step is MANDATORY."
+	echo
+	DO_IT=''
+	read -p "Run raspi-config to enable now? (y/n): " DO_IT
+	while true; do
+		case DO_IT in
+			[Yy]* )
+				sudo raspi-config
+				;;
+			[Nn]* )
+				echo "Cancelling setup..."
+				exit 1
+				;;
+			* ) echo "Please anser yes or no.";;
+		esac
+	done
+fi
+
+# Check required modules. Fail if any are missing.
+REQUIRED_MODULES=( change_pi_passwd.sh install_apache.sh install_php5.sh install_mysql.sh )
+for module in $REQUIRED_MODULES; do
+	if [ ! -f $module ]; then
+		echo "ERROR: module missing: $module"
+		echo "Cannot continue."
+		exit 1
+	fi
+done
+
+# Install required modules.
+BAIL=0
+RET=0
+for module in $REQUIRED_MODULES; do
+	# The last module we processed failed.
+	if [ $BAIL -eq 1 ]; then
+		break
+	fi
+
+	echo
+	./$module || RET="$?"
+	case name in
+		change_pi_passwd.sh)
+			case RET in
+				0)
+					# An error occurred. We will abort.
+					echo
+					echo "ERROR: Password change failed."
+					$BAIL=1
+					;;
+				1)
+					# Password change successful.
+					echo "Password changed susccessfully."
+					;;
+				2)
+					# User opted to continue without changing passowrd.
+					echo
+					echo "WARNING: User opted out of password change."
+					;;
+			esac
+			;;
+		* )
+			if [ $RET -ne 0 ]; then
+				BAIL=1
+			fi
+			;;
+	esac
+done
+
+# Did any of the modules fail?
+if [ $BAIL -eq 1 ]; then
+	echo
+	echo "ERROR: Required module failed installation."
+	exit 1
+fi
+
+# Install optional modules.
+OPTIONAL_MODULES=( install_vsftp.sh install_phpmyadmin.sh )
+for module in $OPTIONAL_MODULES; do
+	if [ -f $module ]; then
+		./$module || RET="$?"
+		echo
+		case RET in
+			case 0)
+				# Cancel
+				echo "User canclled module install."
+				;;
+			case 1)
+				# Continue
+				echo "Successful module installation."
+				;;
+			case 2)
+				# Fail
+				echo "WARNING: Optional module installation failed."
+				;;
+		esac
+	fi
+done
+
+exit 0
