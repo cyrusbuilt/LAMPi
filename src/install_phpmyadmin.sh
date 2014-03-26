@@ -3,7 +3,7 @@
 #  install_phpmyadmin.sh
 #  
 #
-#  Created by Cyrus on 3/18/13.
+#  Created by Cyrus on 3/18/14.
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
