@@ -28,7 +28,7 @@ IV_CONTINUE=1
 IV_INST_ERR=2
 
 # Ask the user it is ok install.
-function iv_check_install_vsftp() {
+iv_check_install_vsftp() {
 	echo
 	echo "This module will install the VSFTP server."
 	echo "This is an optional installation. If you choose not to install,"
@@ -46,7 +46,7 @@ function iv_check_install_vsftp() {
 }
 
 # Configure the daemon.
-function iv_config_vsftpd() {
+iv_config_vsftpd() {
 	echo "Configuring VSFTP..."
 	VSFTP_CONFIG=/etc/vsftpd.conf
 	sudo mv $VSFTP_CONFIG $VSFTP_CONFIG.old
@@ -58,13 +58,13 @@ function iv_config_vsftpd() {
 }
 
 # Restart the daemon to apply the configuration.
-function iv_apply_config() {
+iv_apply_config() {
 	echo "Applying configuration..."
 	sudo service vsftp restart
 }
 
 # Make the user change the root password.
-function iv_change_root_passwd() {
+iv_change_root_passwd() {
 	echo "Set new root password:"
 	sudo -i
 	passwd root
@@ -72,14 +72,14 @@ function iv_change_root_passwd() {
 }
 
 # Modify the local password db.
-function iv_modify_passwd_db() {
+iv_modify_passwd_db() {
 	echo "Updating password DB..."
-	su root << 'EOF'
-		PDB=/etc/passwd
-		mv $PDB $PDB.old
-		sed -i 's/#pi:x/pi:x/g' $PDB.old > $PDB
-		rm -f $PDB.old
-		usermod -d /var/wwww pi
+	su root <<EOF
+	PDB=/etc/passwd
+	mv $PDB $PDB.old
+	sed -i 's/#pi:x/pi:x/g' $PDB.old > $PDB
+	rm -f $PDB.old
+	usermod -d /var/wwww pi
 	EOF
 
 	sudo -i

@@ -36,7 +36,7 @@ CURRENT_DIR=`pwd`
 LAMPI_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Ask the user if it is ok to run setup.
-function main_check_proceed() {
+main_check_proceed() {
 	echo
 	echo "********************************************************"
 	echo "* $LAMPI_NAME v$LAMPI_VERSION                          *"
@@ -61,7 +61,7 @@ function main_check_proceed() {
 }
 
 # Initialize.
-function main_init() {
+main_init() {
 	echo
 	echo "Initializing..."
 	# Make sure LAMPi's directory is the working directory.
@@ -72,7 +72,7 @@ function main_init() {
 }
 
 # Check to see if SSH exists and is running.
-function main_check_ssh() {
+main_check_ssh() {
 	if [ -f /etc/init.d/ssh ]; then
 		sudo service ssh status &> /dev/null
 		if [ $? -eq 0 ]; then

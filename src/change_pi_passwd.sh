@@ -28,7 +28,7 @@ CPP_CHANGED=1
 CPP_CONTINUE=2
 
 # Ask the user if we can proceed.
-function cpp_check_change_passwd() {
+cpp_check_change_passwd() {
 	echo
 	echo "*********** IMPORTANT **************"
 	echo "*                                  *"
@@ -52,7 +52,7 @@ function cpp_check_change_passwd() {
 }
 
 # Check to see if the user wants to quit.
-function cpp_check_quit() {
+cpp_check_quit() {
 	echo
 	local willquit
 	while true; do

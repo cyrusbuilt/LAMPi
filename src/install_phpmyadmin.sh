@@ -31,7 +31,7 @@ IPA_CONTINUE=1
 IPA_INST_ERR=2
 
 # Ask the user if it is ok to install.
-function ipa_check_install_phpmyadmin() {
+ipa_check_install_phpmyadmin() {
 	echo
 	echo "This module will install phpMyAdmin in the Apache web content directory."
 	echo "ion. If you choose not to install,"
@@ -49,7 +49,7 @@ function ipa_check_install_phpmyadmin() {
 }
 
 # Download the phpMyAdmin package.
-function ipa_download() {
+ipa_download() {
 	echo
 	echo "Downloading phpMyAdmin..."
 	cd /var/wwww
@@ -61,7 +61,7 @@ function ipa_download() {
 }
 
 # Extract the package contents into a subdirectory of the apache web root (install).
-function ipa_extract() {
+ipa_extract() {
 	local pkg
 	echo
 	echo "Extracting package files..."
@@ -72,7 +72,7 @@ function ipa_extract() {
 }
 
 # Configure phpAdmin.
-function ipa_configure() {
+ipa_configure() {
 	local ipa_conf
 	echo
 	echo "Configuring phpMyAdmin..."
